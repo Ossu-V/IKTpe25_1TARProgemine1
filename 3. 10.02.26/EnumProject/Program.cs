@@ -25,6 +25,8 @@ namespace EnumProject
             //White = 0
             //ühe värvi nimetuse peab konsoolis ära näitama
 
+            //(int) - castimine ehk teisendab teiseks andmetüübiks
+            //juhul kui info võib kaduma minna ja ei näita soovitud tulemust
             Console.WriteLine(Colors.Blue);
             Console.WriteLine((int)Colors.Blue);
         }
