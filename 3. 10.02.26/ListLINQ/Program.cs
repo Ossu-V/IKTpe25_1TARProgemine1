@@ -37,7 +37,10 @@ namespace ListLINQ
 
             Console.WriteLine("---------------------------------------");
             Console.WriteLine("Kasutame LINQ Selecti ehk teine variant");
+            //siin koondame kogu info result muutuja sisse
             var result = person
+                .Where(p => p.Id == 1 || p.Age == 9) //Where-ga saab teha konkreetse päringu, et vastab mingitele tingimustele
+                .OrderBy(p => p.Name) //järjestab isikud tähestiku järgi
                 .Select(x => new
                 {
                     Id = x.Id,
@@ -45,10 +48,18 @@ namespace ListLINQ
                     Age = x.Age,
                 });
 
+            //kasutame result muutujat ja teeme ta lahtirea kaupa
+            //läbi muutuja item
             foreach (var item in result)
             {
                 Console.WriteLine("Id on " + item.Id + ", nimi on " + item.Name + " ja vanus on " + item.Age);
             }
+
+            Console.WriteLine("---------------------------------------");
+            Console.WriteLine("Gruppide kaupa sorteerimine");
+
+            var groupBy = person
+                .GroupBy(p => p.Age);
         }
     }
 }
