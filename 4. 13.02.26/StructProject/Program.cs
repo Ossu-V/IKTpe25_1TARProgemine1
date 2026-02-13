@@ -57,6 +57,7 @@ namespace StructProject
     //string City ja int on PostalCode
     //kutsuda see struct Main-s välja
     //structi sees tuleb sellele anda juba väärtus
+    //andmeid ei saa structis edasi anda
 
     struct InsertedIntAndString
     {
