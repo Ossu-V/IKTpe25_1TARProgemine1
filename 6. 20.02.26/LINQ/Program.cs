@@ -75,6 +75,8 @@ namespace LINQ
         }
         public static void SelectByLINQ()
         {
+            //select lihtsalt tagastab andmed nii nagu need on andmebaasis
+            //sama hea, mis SQL select
             var result = PeopleList.peoples
                 .Select(x => new
                 {
