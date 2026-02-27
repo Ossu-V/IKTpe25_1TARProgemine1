@@ -22,7 +22,7 @@
             {
                 Id = 3,
                 Name = "Ron",
-                Age = 19,
+                Age = 17,
                 GenderId = Guid.Parse("7d37e4eb-a136-4e02-8c6d-f5f899b80dad")
             },
             new People()
