@@ -18,7 +18,7 @@
             machine.SetVinCode(vinCode);
 
             Console.WriteLine("Edukalt sisestatud");
-            Console.WriteLine("VIN kood: {0}", machine.GetVinCode());
+            Console.WriteLine("VIN kood on: {0}", machine.GetVinCode());
         }
     }
     class Car
