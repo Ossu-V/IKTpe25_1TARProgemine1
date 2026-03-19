@@ -8,5 +8,20 @@ namespace InheritanceAndServiceClass.AppServices.Services
         {
             Console.WriteLine("Car Services");
         }
+
+        public void PostData()
+        {
+            Console.WriteLine("Andmed on edukalt salvestatud");
+        }
+
+        public void PutData()
+        {
+            Console.WriteLine("Andmed on edukalt uuendatud");
+        }
+
+        public void DeleteData()
+        {
+            Console.WriteLine("Andmed on edukalt kustutatud");
+        }
     }
 }

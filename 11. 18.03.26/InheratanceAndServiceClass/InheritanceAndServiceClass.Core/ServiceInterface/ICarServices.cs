@@ -4,19 +4,10 @@
     {
         void GetData();
 
-        void PostData()
-        {
-            Console.WriteLine("Andmed on edukalt salvestatud");
-        }
+        void PostData();
 
-        void PutData()
-        {
-            Console.WriteLine("Andmed on edukalt uuendatud");
-        }
+        void PutData();
 
-        void DeleteData()
-        {
-            Console.WriteLine("Andmed on edukalt kustutatud");
-        }
+        void DeleteData();
     }
 }

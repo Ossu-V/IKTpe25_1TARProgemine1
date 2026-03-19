@@ -23,6 +23,8 @@ namespace InheritanceAndServiceClass
 
             builder.Services.AddScoped<ICarServices, CarServices>();
 
+            var app = builder.Build();
+
             Console.WriteLine("Hello, World Switch!");
             Console.WriteLine("1. GetAsync");
             Console.WriteLine("2. SaveAsync");
@@ -31,53 +33,35 @@ namespace InheritanceAndServiceClass
 
             int choice = int.Parse(Console.ReadLine());
 
-            switch (choice)
+            using (var scope = app.Services.CreateScope())
             {
-                case 1:
-                    var app = builder.Build();
-                    using (var scope = app.Services.CreateScope())
-                    {
-                        var carServices = scope.ServiceProvider.GetRequiredService<ICarServices>();
-                        var program = new Program(carServices);
-                        program.GetAsync();
-                    }
-                    break;
+                var carServices = scope.ServiceProvider.GetRequiredService<ICarServices>();
+                var program = new Program(carServices);
 
-                case 2:
-                    app = builder.Build();
-                    using (var scope = app.Services.CreateScope())
-                    {
-                        var carServices = scope.ServiceProvider.GetRequiredService<ICarServices>();
-                        var program = new Program(carServices);
-                        program.SaveAsync();
-                    }
+                switch (choice)
+                {
+                    case 1:
+                        program.GetAsync();
                         break;
 
-                case 3:
-                    app = builder.Build();
-                    using (var scope = app.Services.CreateScope())
-                    {
-                        var carServices = scope.ServiceProvider.GetRequiredService<ICarServices>();
-                        var program = new Program(carServices);
+                    case 2:
+                        program.SaveAsync();
+                        break;
+
+                    case 3:
                         program.UpdateData();
-                    }
-                    break;
+                        break;
 
-                case 4:
-                    app = builder.Build();
-                    using (var scope = app.Services.CreateScope())
-                    {
-                        var carServices = scope.ServiceProvider.GetRequiredService<ICarServices>();
-                        var program = new Program(carServices);
+                    case 4:
                         program.EraseData();
-                    }
-                    break;
+                        break;
 
-                default:
-                    Console.WriteLine("Error");
-                    break;
+                    default:
+                        Console.WriteLine("Error");
+                        break;
+                }
+                Console.Clear();
             }
-            Console.Clear();
         }
 
         public IActionResult GetAsync()
@@ -85,11 +69,6 @@ namespace InheritanceAndServiceClass
             _carServices.GetData();
 
             return View();
-        }
-
-        private IActionResult View()
-        {
-            throw new NotImplementedException();
         }
 
         public IActionResult SaveAsync()
@@ -108,9 +87,14 @@ namespace InheritanceAndServiceClass
 
         public IActionResult EraseData()
         {
-            _carServices.PutData();
+            _carServices.DeleteData();
 
             return View();
+        }
+
+        private IActionResult View()
+        {
+            throw new NotImplementedException();
         }
     }
 }
