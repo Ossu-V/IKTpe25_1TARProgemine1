@@ -17,7 +17,7 @@ namespace University.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var data = await _context.StudentsToListAsync();
+            var data = await _context.Students.ToListAsync();
 
 
             return View();
