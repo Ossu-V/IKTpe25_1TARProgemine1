@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using University.Data;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace University
 {
@@ -21,6 +22,9 @@ namespace University
 
             var app = builder.Build();
 
+            //create DB if it dosent exist and seed initial data
+            CreateDbIfNotExists(app);
+
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {
@@ -41,6 +45,26 @@ namespace University
                 .WithStaticAssets();
 
             app.Run();
+        }
+
+        //luuakse andmebaas, kui see veel ei eksisteeri
+        //ja sisestab sinna algandmed
+        private static void CreateDbIfNotExists(IHost host)
+        {
+            using (var scope = host.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<UniversityContext>();
+                    DbInitializer.Initialize(context);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred creating the DB.")
+                }
+            }
         }
     }
 }
