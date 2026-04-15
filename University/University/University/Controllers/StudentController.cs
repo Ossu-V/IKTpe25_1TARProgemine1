@@ -19,7 +19,7 @@ namespace University.Controllers
         {
             var data = await _context.Students.ToListAsync();
 
-            return View();
+            return View(data);
         }
     }
 }
