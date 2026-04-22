@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using University.Data;
+using University.Models;
 using University.ViewModel;
 
 namespace University.Controllers
@@ -45,14 +47,38 @@ namespace University.Controllers
 
             //leiame student´i id järgi
             var student = await _context.Students
+                //Include lubab objekti kasutada objekti sees
+                .Include(s => s.Enrollments)
+                //kui tahad uuesti objekti kasutada objekti sees, siis kasutad ThenInclude
+                    .ThenInclude(e => e.Course)
+                    //andmeid ei salvestata vahemällu ja ei jälgita
+                .AsNoTracking()
+                //tagastab esimese elemendi andmetest, mis on tingimuses välja toodud
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            var vm = new ViewModel.StudentDetailsViewModel
+            var vm = new StudentDetailsViewModel
             {
                 Id = student.Id,
                 LastName = student.LastName,
                 FirstMidName = student.FirstMidName,
-                EnrollmentDate = student.EnrollmentDate
+                EnrollmentDate = student.EnrollmentDate,
+                //miks kasutasime ?? - vaikiva väärtuse annab e default väärtus, kui muutuja on tühi (null)
+                //või mitte defineeritud. Annab enne vasakpoolse väärtuse, kui see ei ole null. Kui on null,
+                //siis annab parempoolse väärtuse.
+                EnrollmentsVm = (student.Enrollments ?? Enumerable.Empty<Enrollment>())
+                    .Select(x => new EnrollmentViewModel
+                    {
+                        CourseId = x.CourseId,
+                        Grade = x.Grade,
+                        CourseVm = new CourseViewModel
+                        {
+                            CourseId = x.Course?.CourseId ?? 0,
+                            Title = x.Course?.Title,
+                            Credits = x.Course?.Credits ?? 0
+                        }
+                        //üks õpilane võib mitu kursust olla läbinud ja
+                        //selle tulemusel tuleb lõppu panna ToArray
+                    }).ToArray()
             };
 
             //kui student on null, siis tagastame NotFound() tulemuse
