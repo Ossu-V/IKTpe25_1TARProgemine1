@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
 using University.Data;
 using University.Models;
 using University.ViewModel;
@@ -123,6 +124,39 @@ namespace University.Controllers
                 //pärast salvestamist suuname kasutaja tagasi Index vaatesse
                 return RedirectToAction(nameof(Index));
             }
+            return View(vm);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Update(int id)
+        {
+            var student = await _context.Students
+                //Include lubab objekti kasutada objekti sees
+                .Include(s => s.Enrollments)
+                    //kui tahad uuesti objekti kasutada objekti sees, siis kasutad ThenInclude
+                    .ThenInclude(e => e.Course)
+                //andmeid ei salvestata vahemällu ja ei jälgita
+                .AsNoTracking()
+                //tagastab esimese elemendi andmetest, mis on tingimuses välja toodud
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+
+            //kui student on null, siis on NotFound()
+            if (student == null)
+            {
+                return NotFound();
+            }
+
+            var vm = new StudentUpdateViewModel
+            {
+                Id = student.Id,
+                FirstMidName = student.FirstMidName,
+                LastName = student.LastName,
+                EnrollmentDate = student.EnrollmentDate
+            };
+
+            //tuleb teha domaini modelist andmete ülekanne view modeli omasse
+
             return View(vm);
         }
     }
