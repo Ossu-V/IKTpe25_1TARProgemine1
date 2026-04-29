@@ -48,6 +48,9 @@
         </dd>
     </dl>
 </div>
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+<hr />
+<form asp-action ="DeletePost">
+    <input type="hidden" asp-for="Id" />
+    <input type ="submit" value="Delete" class="btn btn-danger" />
+    <a asp-action="Index" asp-controller="student" class="btn btn-success">Back to List</a>
+</form>
