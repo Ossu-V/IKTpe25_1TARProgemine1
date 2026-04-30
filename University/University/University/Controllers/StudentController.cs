@@ -22,11 +22,26 @@ namespace University.Controllers
         }
         public async Task<IActionResult> Index(string sortOrder)
         {
-            ViewData["NameSortParm"] = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewData["NameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
 
-            var students = from s in _context.Students
-                           select s;
+            //var students = from s in _context.Students
+            //select s;
+
+            //leiame kõik student´id ja teisendame need StudentIndexViewModel´iks
+            //miks peab kasutama await?
+            //kui me kasutame await, siis me ootame kuni päring on lõpetatud
+            //ja saame tulemuse, enne kui me jätkame koodi täitmist
+            var students = _context.Students
+                .Select(s => new StudentIndexViewModel
+                {
+                    Id = s.Id,
+                    LastName = s.LastName,
+                    FirstMidName = s.FirstMidName,
+                    EnrollmentDate = s.EnrollmentDate
+                    //miks kasutame ToListAsync()?
+                    //kui kasutame ToListAsync(), siis me saame tulemuse listina
+                });
 
             switch (sortOrder)
             {
@@ -47,20 +62,7 @@ namespace University.Controllers
                     break;
             }
 
-            //leiame kõik student´id ja teisendame need StudentIndexViewModel´iks
-            //miks peab kasutama await?
-            //kui me kasutame await, siis me ootame kuni päring on lõpetatud
-            //ja saame tulemuse, enne kui me jätkame koodi täitmist
-            var result = await _context.Students
-                .Select(s => new StudentIndexViewModel
-            {
-                Id = s.Id,
-                LastName = s.LastName,
-                FirstMidName = s.FirstMidName,
-                EnrollmentDate = s.EnrollmentDate
-                //miks kasutame ToListAsync()?
-                //kui kasutame ToListAsync(), siis me saame tulemuse listina
-            }).ToListAsync();
+            var result = await students.ToListAsync();
 
             return View(result);
         }
