@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
 using University.Data;
 using University.Models;
+using University.Utilities;
 using University.ViewModel;
 
 namespace University.Controllers
@@ -20,11 +21,20 @@ namespace University.Controllers
         {
             _context = context;
         }
-        public async Task<IActionResult> Index(string sortOrder, string searchString)
+        public async Task<IActionResult> Index(string sortOrder, string searchString, int? pageNumber, string currentFilter)
         {
             ViewData["NameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
             ViewData["CurrentFilter"] = searchString;
+
+            if (searchString != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                searchString = currentFilter;
+            }
 
             //var students = from s in _context.Students
             //select s;
@@ -71,7 +81,9 @@ namespace University.Controllers
 
             var result = await students.ToListAsync();
 
-            return View(result);
+            int pageSize = 3;
+
+            return View(await PaginatedList<StudentIndexViewModel>.CreateAsync(students.AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
         public async Task<IActionResult> Details(int? id)
