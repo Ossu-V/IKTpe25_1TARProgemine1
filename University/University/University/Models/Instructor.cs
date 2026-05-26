@@ -13,13 +13,18 @@ namespace University.Models
 
         public DateTime EnrollmentDate { get; set; }
 
-        //mis on ICollection?
-        //Nimekiri kuhu saab panna mitut objekti.
-
+        //mis on ICollection??
+        //ICollection on üldine kogutüüp, mis võimaldab hoida mitut objekti.
+        //See on kasulik, kui soovite hoida näiteks mitut kursust, mida õpetaja õpetab.
+        //ICollection võimaldab teil lisada, eemaldada ja hallata neid objekte kogu kogus.
         public ICollection<CourseAssignment> CourseAssignments { get; set; }
 
         //miks siin ei kasutata ICollection, vaid lihtsalt OfficeAssignment?
-        //siin EI kasutata ICollection, sest seos on ainult üks ühele seos Instructoriga.
+        //Sest OfficeAssignment on üks-ühele seos Instructoriga, st iga õpetaja
+        //võib omada ainult ühte kontoripinda. Seega ei ole vaja kasutada
+        //ICollectioni, kuna ei ole vaja hoida mitut OfficeAssignment objekti.
+        //Kui kasutaksime ICollectioni, siis see tähendaks, et õpetaja
+        //võiks omada mitut kontoripinda, mis ei ole meie mudelis korrektne.
         public OfficeAssignment OfficeAssignments { get; set; }
     }
 }
