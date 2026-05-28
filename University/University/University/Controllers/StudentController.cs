@@ -224,7 +224,7 @@ namespace University.Controllers
 
                 //kui andmed on uuendatud, siis suunab tagasi Update vaatesse, kus saab kohe uuesti andmeid uuendada.
                 //Hetkel suunab Indexi vaatesse peale uuendust
-                return RedirectToAction(nameof(Update), new {id = studentUpdate});
+                return RedirectToAction(nameof(Index), new {id = studentUpdate});
             }
 
             return RedirectToAction(nameof(Index));
