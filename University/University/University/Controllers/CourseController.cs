@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using University.Data;
 using University.Models;
 using University.ViewModel;
@@ -86,6 +88,73 @@ namespace University.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Create()
+        {
+            PopulateDepartmentDropDownList();
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CourseCreateViewModel vm)
+        {  
+            var course = new Course   
+            { 
+                CourseId = vm.CourseId,  
+                Title = vm.Title,    
+                Credits = vm.Credits,    
+                Departments = new Department     
+                {      
+                    Name = vm.Department.Name  
+                }   
+            };
+                
+            _context.Add(course);  
+            await _context.SaveChangesAsync();
+
+            PopulateDepartmentDropDownList(course.DepartmentId);
+            return RedirectToAction(nameof(Index));
+        }
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var course = await _context.Courses
+                .Include(c => c.Departments)
+                .Where(c => c.CourseId == id)
+                .Select(c => new CourseDetailsViewModel
+                {
+                    CourseId = c.CourseId,
+                    Title = c.Title,
+                    Credits = c.Credits,
+                    Department = new CourseDepartmentIndexViewModel
+                    {
+                        DepartmentName = c.Departments.Name
+                    }
+                })
+                .FirstOrDefaultAsync();
+
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            return View(course);
+        }
+
+        private void PopulateDepartmentDropDownList(object selectDepartment = null)
+        {
+            var departmentQuery = from d in _context.Departments
+                                  orderby d.Name
+                                  select d;
+            ViewBag.DepartmentId = new SelectList(departmentQuery
+                .AsNoTracking(), "DepartmentId", "Name", selectDepartment);
         }
     }
 }
