@@ -18,6 +18,6 @@ namespace University.ViewModel.CourseVM
 
     public class DepartmentViewModel
     {
-        public string? Name { get; set; }
+        public string Name { get; set; }
     }
 }
