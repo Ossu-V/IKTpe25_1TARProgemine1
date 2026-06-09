@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using University.Data;
 using University.Models;
 using University.ViewModel;
@@ -11,13 +10,11 @@ namespace University.Controllers
 {
     public class CourseController : Controller
     {
-        //on vaja kututada välja Univercity constructor 
         private readonly UniversityContext _context;
         public CourseController
-         (
-             UniversityContext context
-         )
-
+            (
+                UniversityContext context
+            )
         {
             _context = context;
         }
@@ -25,12 +22,11 @@ namespace University.Controllers
         public async Task<IActionResult> Index()
         {
             var course = _context.Courses
-                .Include(c => c.Departments)
                 .Select(c => new CourseIndexViewModel
                 {
                     CourseId = c.CourseId,
-                    Title = c.Title,
                     Credits = c.Credits,
+                    Title = c.Title,
                     DepartmentId = c.DepartmentId,
                     Department = new CourseDepartmentIndexViewModel
                     {
@@ -48,7 +44,7 @@ namespace University.Controllers
                 return NotFound();
             }
 
-            var course = await _context.Courses
+            var vm = await _context.Courses
                 .Where(c => c.CourseId == id)
                 .Select(c => new CourseUpdateViewModel
                 {
@@ -62,7 +58,7 @@ namespace University.Controllers
                 })
                 .FirstOrDefaultAsync();
 
-            return View(course);
+            return View(vm);
         }
 
         [HttpPost]
@@ -99,19 +95,17 @@ namespace University.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CourseCreateViewModel vm)
-        {  
-            var course = new Course   
-            { 
-                CourseId = vm.CourseId,  
-                Title = vm.Title,    
-                Credits = vm.Credits,    
-                Departments = new Department     
-                {      
-                    Name = vm.Department.Name  
-                }   
+        {
+
+            var course = new Course
+            {
+                CourseId = vm.CourseId,
+                Title = vm.Title,
+                Credits = vm.Credits,
+                DepartmentId = vm.DepartmentId,
             };
-                
-            _context.Add(course);  
+
+            _context.Add(course);
             await _context.SaveChangesAsync();
 
             PopulateDepartmentDropDownList(course.DepartmentId);
@@ -131,8 +125,9 @@ namespace University.Controllers
                 .Select(c => new CourseDetailsViewModel
                 {
                     CourseId = c.CourseId,
-                    Title = c.Title,
                     Credits = c.Credits,
+                    Title = c.Title,
+                    DepartmentId = c.DepartmentId,
                     Department = new CourseDepartmentIndexViewModel
                     {
                         DepartmentName = c.Departments.Name
@@ -148,13 +143,59 @@ namespace University.Controllers
             return View(course);
         }
 
-        private void PopulateDepartmentDropDownList(object selectDepartment = null)
+        public async Task<IActionResult> Delete(int? id)
         {
-            var departmentQuery = from d in _context.Departments
-                                  orderby d.Name
-                                  select d;
-            ViewBag.DepartmentId = new SelectList(departmentQuery
-                .AsNoTracking(), "DepartmentId", "Name", selectDepartment);
+            if (id == null || _context.Courses == null)
+            {
+                return NotFound();
+            }
+
+            var course = await _context.Courses
+                .Include(c => c.Departments)
+                .Where(c => c.CourseId == id)
+                .Select(c => new CourseDeleteViewModel
+                {
+                    CourseId = c.CourseId,
+                    Credits = c.Credits,
+                    Title = c.Title,
+                    DepartmentId = c.DepartmentId,
+                    Department = new CourseDepartmentIndexViewModel
+                    {
+                        DepartmentName = c.Departments.Name
+                    }
+                })
+                .FirstOrDefaultAsync();
+
+            if (course == null)
+            {
+                return NotFound();
+            }
+
+            return View(course);
+        }
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var course = await _context.Courses.FindAsync(id);
+            if (course != null)
+            {
+                _context.Courses.Remove(course);
+            }
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private void PopulateDepartmentDropDownList(object selectedDepartment = null)
+        {
+            var departmentsQuery = _context.Departments
+                .OrderBy(d => d.Name)
+                .GroupBy(d => d.Name)
+                .Select(g => g.First());
+
+            ViewBag.DepartmentId = new SelectList(departmentsQuery
+                .AsNoTracking(), "DepartmentId", "Name", selectedDepartment);
         }
     }
 }
