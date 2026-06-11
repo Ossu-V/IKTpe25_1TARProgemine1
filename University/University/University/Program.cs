@@ -20,6 +20,8 @@ namespace University
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
+            builder.Services.AddScoped<University.ServiceInterface.IFileServices, University.Services.FileServices>();
+
             var app = builder.Build();
 
             //create DB if it dosent exist and seed initial data

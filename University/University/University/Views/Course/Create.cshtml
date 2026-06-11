@@ -5,7 +5,8 @@
 }
 <h1>@ViewData["Title"]</h1>
 
-<form asp-controller="course" asp-action="Create">
+<form asp-controller="course" asp-action="Create" enctype="multipart/form-data">
+    <div asp-validation-summary="All" class="text-danger"></div>
     <div class="form-group">
         <label asp-for="CourseId" class="control-label"></label>
         <input asp-for="CourseId" class="form-control" />
@@ -28,6 +29,12 @@
         </select>
         <span asp-validation-for="DepartmentId" class="text-danger"></span>
     </div>
+    <div class="form-group">
+        <label asp-for="File" class="control-label">Laadi üles pilt</label>
+        <input asp-for="File" type="file" class="form-control" />
+        <span asp-validation-for="File" class="text-danger"></span>
+    </div>
+
     <div class="form-group">
         <input type="submit" value="Create" class="btn btn-primary" />
     </div>

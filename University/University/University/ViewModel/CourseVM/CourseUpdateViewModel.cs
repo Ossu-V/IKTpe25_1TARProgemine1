@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.AspNetCore.Http;
 
 namespace University.ViewModel.CourseVM
 {
@@ -13,5 +14,8 @@ namespace University.ViewModel.CourseVM
         public int DepartmentId { get; set; }
 
         public CourseDepartmentIndexViewModel Department { get; set; }
+
+        public IFormFile? File { get; set; }
+        public List<ImageViewModel>? Image { get; set; } = new List<ImageViewModel>();
     }
 }
