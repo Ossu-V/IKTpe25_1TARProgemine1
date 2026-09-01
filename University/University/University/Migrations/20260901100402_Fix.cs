@@ -23,7 +23,6 @@ namespace University.Migrations
                 table: "FileToApis");
         }
 
-        //2
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
