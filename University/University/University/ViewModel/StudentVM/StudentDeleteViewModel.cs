@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using University.Models;
 
-namespace University.ViewModel
+namespace University.ViewModel.StudentVM
 {
-    public class StudentDetailsViewModel
+    public class StudentDeleteViewModel
     {
         public int Id { get; set; }
 
@@ -19,24 +18,6 @@ namespace University.ViewModel
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         [Display(Name = "Enrollment Date")]
         public DateTime EnrollmentDate { get; set; }
-
         public ICollection<EnrollmentViewModel> EnrollmentsVm { get; set; }
-    }
-
-    public class EnrollmentViewModel
-    {
-        public int EnrollmentId { get; set; }
-        public int CourseId { get; set; }
-        public int StudentId { get; set; }
-        public Grade? Grade { get; set; }
-
-        public CourseViewModel CourseVm { get; set; }
-    }
-
-    public class CourseViewModel
-    {
-        public int CourseId { get; set; }
-        public string Title { get; set; }
-        public int Credits { get; set; }
     }
 }

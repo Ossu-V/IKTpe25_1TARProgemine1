@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace University.ViewModel
+namespace University.ViewModel.StudentVM
 {
-    public class StudentCreateViewModel
+    public class StudentUpdateViewModel
     {
         public int Id { get; set; }
 
@@ -14,6 +14,7 @@ namespace University.ViewModel
 
         [Required]
         [StringLength(50, MinimumLength = 1)]
+        [Column("FirstName")]
         [Display(Name = "First Name")]
         public string FirstMidName { get; set; }
 
