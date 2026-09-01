@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using University.Models;
 
 namespace University.ViewModel
 {
@@ -25,7 +24,6 @@ namespace University.ViewModel
         public string FullName => $"{LastName}, {FirstMidName}";
 
         //teine variant, mis ühendab ees- ja perekonnanime
-
         //[Display(Name = "Full Name")]
         //public string Fullname
         //{

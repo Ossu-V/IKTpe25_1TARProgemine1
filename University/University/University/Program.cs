@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using University.Data;
 using Microsoft.Extensions.DependencyInjection;
+using University.Data;
+using University.ServiceInterface;
+using University.Services;
+
 
 namespace University
 {
@@ -13,18 +16,20 @@ namespace University
             builder.Services.AddDbContext<UniversityContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("UniversityContext")));
 
-            //Add database exception filter for development environment 
-            //This will show detailed database errors durning development
+            //Dependency Injection. Kus kaks omavahel kokku pandud classi saab ühe all panna
+            // ja selle tulemusel saab erinevaid teenuseid kasutada serviceClassist.
+            builder.Services.AddScoped<IFileServices, FileServices>();
+
+            // Add database exception filter for development environment
+            // This will show detailed database errors during development
             builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
 
-            builder.Services.AddScoped<University.ServiceInterface.IFileServices, University.Services.FileServices>();
-
             var app = builder.Build();
 
-            //create DB if it dosent exist and seed initial data
+            // create DB if it doesn't exist and seed initial data
             CreateDbIfNotExists(app);
 
             // Configure the HTTP request pipeline.

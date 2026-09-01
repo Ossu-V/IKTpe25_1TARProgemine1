@@ -56,7 +56,7 @@ namespace University.Migrations
 
                     b.HasIndex("InstructorId");
 
-                    b.ToTable("CourseAssignment", (string)null);
+                    b.ToTable("CourseAssignments", (string)null);
                 });
 
             modelBuilder.Entity("University.Models.Department", b =>
@@ -127,6 +127,8 @@ namespace University.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CourseId");
+
                     b.ToTable("FileToApis", (string)null);
                 });
 
@@ -166,7 +168,7 @@ namespace University.Migrations
 
                     b.HasKey("InstructorId");
 
-                    b.ToTable("OfficeAssignment", (string)null);
+                    b.ToTable("OfficeAssignments", (string)null);
                 });
 
             modelBuilder.Entity("University.Models.Student", b =>
@@ -252,6 +254,17 @@ namespace University.Migrations
                     b.Navigation("Student");
                 });
 
+            modelBuilder.Entity("University.Models.FileToApi", b =>
+                {
+                    b.HasOne("University.Models.Course", "Course")
+                        .WithMany("Files")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
             modelBuilder.Entity("University.Models.OfficeAssignment", b =>
                 {
                     b.HasOne("University.Models.Instructor", "Instructor")
@@ -268,6 +281,8 @@ namespace University.Migrations
                     b.Navigation("CourseAssignments");
 
                     b.Navigation("Enrollments");
+
+                    b.Navigation("Files");
                 });
 
             modelBuilder.Entity("University.Models.Department", b =>

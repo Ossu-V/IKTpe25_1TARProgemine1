@@ -18,7 +18,6 @@ namespace University.ViewModel
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         [Display(Name = "Enrollment Date")]
         public DateTime EnrollmentDate { get; set; }
-
         public ICollection<EnrollmentViewModel> EnrollmentsVm { get; set; }
     }
 }

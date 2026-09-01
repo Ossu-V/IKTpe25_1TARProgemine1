@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using University.Data;
-using University.Dto;
 using University.Models;
 using University.ServiceInterface;
-using University.ViewModel;
 using University.ViewModel.CourseVM;
 
 namespace University.Controllers
@@ -18,7 +17,7 @@ namespace University.Controllers
         public CourseController
             (
                 UniversityContext context,
-            IFileServices fileServices
+                IFileServices fileServices
             )
         {
             _context = context;
@@ -34,6 +33,7 @@ namespace University.Controllers
                     Credits = c.Credits,
                     Title = c.Title,
                     DepartmentId = c.DepartmentId,
+
                     Department = new CourseDepartmentIndexViewModel
                     {
                         DepartmentName = c.Departments.Name
@@ -43,7 +43,6 @@ namespace University.Controllers
             return View(course);
         }
 
-        [HttpGet]
         public async Task<IActionResult> Update(int? id)
         {
             if (id == null)
@@ -51,38 +50,31 @@ namespace University.Controllers
                 return NotFound();
             }
 
-            var vm = await _context.Courses
-                .Where(c => c.CourseId == id)
-                .Select(c => new CourseUpdateViewModel
-                {
-                    CourseId = c.CourseId,
-                    Credits = c.Credits,
-                    Title = c.Title,
-                    Department = new CourseDepartmentIndexViewModel
-                    {
-                        DepartmentName = c.Departments != null ? c.Departments.Name : null
-                    }
-                })
-                .FirstOrDefaultAsync();
+            var course = await _context.Courses
+                .Include(c => c.Files)
+                .FirstOrDefaultAsync(c => c.CourseId == id);
 
-            if (vm == null)
+            if (course == null)
             {
                 return NotFound();
             }
 
-            // LISAME SIIA PILDID: Küsime pildid andmebaasist otse vaatemudelisse kaasa
-            var courseImage = await _context.FileToApis
-                .Where(f => f.CourseId == vm.CourseId)
-                .Select(f => new ImageViewModel
-                {
-                    FilePath = f.ExistingFilePath // Kasutame baasi välja nime
-                })
-                .ToListAsync();
-
-            if (courseImage != null && courseImage.Any())
+            var vm = new CourseUpdateViewModel
             {
-                vm.Image = courseImage;
-            }
+                CourseId = course.CourseId,
+                Title = course.Title,
+                Credits = course.Credits,
+                DepartmentId = course.DepartmentId,
+                Files = course.Files
+                    .Select(f => new ImageViewModel
+                    {
+                        ImageId = f.Id,
+                        FilePath = f.ExistingFilePath
+                    })
+                    .ToList()
+            };
+
+            PopulateDepartmentDropDownList(course.DepartmentId);
 
             return View(vm);
         }
@@ -93,40 +85,30 @@ namespace University.Controllers
         {
             if (ModelState.IsValid)
             {
-                // 1. Otsime olemasoleva kursuse andmebaasist (et me ei lõhuks seoseid)
-                var course = await _context.Courses.FindAsync(vm.CourseId);
+                return View(vm);
+            }
+            PopulateDepartmentDropDownList(vm.DepartmentId);
 
-                if (course == null)
-                {
-                    return NotFound();
-                }
+            var course = await _context.Courses
+                .FirstOrDefaultAsync(c => c.CourseId == vm.CourseId);
 
-                // 2. Uuendame tekstiväljad
-                course.Title = vm.Title;
-                course.Credits = vm.Credits;
-                // Kuna osakonna muutmine käib tavaliselt ID kaudu, siis veendu, et uuendad vajadusel ka DepartmentId
-
-                // 3. KUI KASUTAJA VALIS UUEDA FAILI: Käivitame failiteenuse
-                if (vm.File != null)
-                {
-                    // Teeme kiirest kohapeal Create vaatemudeli, mida teenus ootab
-                    var createVmForService = new CourseCreateViewModel
-                    {
-                        File = vm.File
-                    };
-
-                    // Söödame teenusele sisse täpselt selle mudeli, mida ta tahab
-                    _fileServices.FilesToApi(createVmForService, course);
-                }
-
-                // 4. Salvestame muudatused
-                _context.Update(course);
-                await _context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+            if (course == null)
+            {
+                return NotFound();
             }
 
-            return View(vm);
+            course.Title = vm.Title;
+            course.Credits = vm.Credits;
+            course.DepartmentId = vm.DepartmentId;
+
+            await _context.SaveChangesAsync();
+
+            if (vm.FileToApis != null && vm.FileToApis.Count > 0)
+            {
+                await _fileServices.AddFilesToCourse(vm.FileToApis, course.CourseId);
+            }
+
+            return RedirectToAction(nameof(Details), new { id = course.CourseId });
         }
 
         public IActionResult Create()
@@ -141,7 +123,9 @@ namespace University.Controllers
         {
             if (ModelState.IsValid)
             {
-                Course course = new Course
+                PopulateDepartmentDropDownList(vm.DepartmentId);
+
+                var course = new Course
                 {
                     CourseId = vm.CourseId,
                     Title = vm.Title,
@@ -149,21 +133,17 @@ namespace University.Controllers
                     DepartmentId = vm.DepartmentId
                 };
 
-                // Käivitame pildi salvestamise teenuse
-                _fileServices.FilesToApi(vm, course);
-
-                _context.Add(course);
+                // save course first to get CourseId
+                _context.Courses.Add(course);
                 await _context.SaveChangesAsync();
+
+                // save uploaded files
+                await _fileServices.AddFilesToCourse(vm.Files, course.CourseId);
 
                 return RedirectToAction(nameof(Index));
             }
 
-            // KUI ANDMED POLNUD VALIIDSED:
-            // Kasutame 'vm.DepartmentId' (kuna 'course' muutujat siin ei eksisteeri)
-            PopulateDepartmentDropDownList(vm.DepartmentId);
-
-            // Tagastame vaate koos sisestatud andmetega, et kasutaja näeks vigu
-            return View(vm);
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -173,9 +153,9 @@ namespace University.Controllers
                 return NotFound();
             }
 
-            // Küsime kursuse andmed baasist ilma vigase seoseta
             var course = await _context.Courses
                 .Include(c => c.Departments)
+                .Include(c => c.Files)
                 .Where(c => c.CourseId == id)
                 .Select(c => new CourseDetailsViewModel
                 {
@@ -186,27 +166,20 @@ namespace University.Controllers
                     Department = new CourseDepartmentIndexViewModel
                     {
                         DepartmentName = c.Departments.Name
-                    }
+                    },
+                    Files = c.Files
+                        .Select(f => new ImageViewModel
+                        {
+                            ImageId = f.Id,
+                            FilePath = f.ExistingFilePath
+                        })
+                        .ToList()
                 })
                 .FirstOrDefaultAsync();
 
             if (course == null)
             {
                 return NotFound();
-            }
-
-            // Kuna seose täpne nimi pole teada, küsime pildid otse FileToApi tabelist kursuse ID järgi:
-            var courseImage = await _context.FileToApis  // Kui tabeli nimi on FilesToApi
-                .Where(f => f.CourseId == course.CourseId) // eeldusel, et tabelis on CourseId olemas
-                .Select(f => new ImageViewModel
-                {
-                    FilePath = f.ExistingFilePath
-                })
-                .ToListAsync();
-
-            if (courseImage != null && courseImage.Any())
-            {
-                course.Image = courseImage;
             }
 
             return View(course);
@@ -231,7 +204,14 @@ namespace University.Controllers
                     Department = new CourseDepartmentIndexViewModel
                     {
                         DepartmentName = c.Departments.Name
-                    }
+                    },
+                    Files = c.Files
+                        .Select(f => new ImageViewModel
+                        {
+                            ImageId = f.Id,
+                            FilePath = f.ExistingFilePath
+                        })
+                        .ToList()
                 })
                 .FirstOrDefaultAsync();
 
@@ -247,30 +227,41 @@ namespace University.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var course = await _context.Courses.FindAsync(id);
+            var course = await _context.Courses
+                .Include(c => c.Files)
+                .FirstOrDefaultAsync(c => c.CourseId == id);
 
-            if (course != null)
+
+            if (course == null)
             {
-                // Otsime üles selle kursuse pildi
-                var img = await _context.FileToApis
-                    .FirstOrDefaultAsync(x => x.CourseId == id);
-
-                // Kui pilt on olemas, kustutame faili arvutist ja andmebaasist
-                if (img != null)
-                {
-                    var dto = new FileToApiDto
-                    {
-                        Id = img.Id,
-                        ExistingFilePath = img.ExistingFilePath
-                    };
-                    await _fileServices.RemoveImageFromApi(dto);
-                }
-
-                _context.Courses.Remove(course);
+                return NotFound();
             }
 
+            // delete physical files + database records
+            await _fileServices.RemoveImagesFromApi(
+                course.Files.ToList());
+
+            // delete course
+            _context.Courses.Remove(course);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
+        }
+
+        
+        public async Task<IActionResult> RemoveFile(Guid imageId)
+        {
+            var file = await _context.FileToApis
+                .FirstOrDefaultAsync(x => x.Id == imageId);
+
+            if (file == null)
+            {
+                return NotFound();
+            }
+
+            await _fileServices.RemoveFileFromApi(file);
+
+            return RedirectToAction(nameof(Update), new { id = file.CourseId });
         }
 
         private void PopulateDepartmentDropDownList(object selectedDepartment = null)

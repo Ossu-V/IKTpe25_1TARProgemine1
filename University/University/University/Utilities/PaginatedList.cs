@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace University.Utilities
 {
@@ -17,14 +16,15 @@ namespace University.Utilities
         }
 
         public bool HasPreviousPage => PageIndex > 1;
-        public bool HasNextPage => PageIndex < TotalPages;  
+        public bool HasNextPage => PageIndex < TotalPages;
+
         public static async Task<PaginatedList<T>> CreateAsync(IQueryable<T> source, int pageIndex, int pageSize)
         {
             var count = await source.CountAsync();
             var items = await source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
             //lõppu on vaja teha return
-
             return new PaginatedList<T>(items, count, pageIndex, pageSize);
         }
+
     }
 }

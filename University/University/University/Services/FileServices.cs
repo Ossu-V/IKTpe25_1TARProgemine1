@@ -1,74 +1,107 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using University.Data;
 using University.Models;
-using University.ViewModel.CourseVM;
 using University.ServiceInterface;
-using University.Dto;
-using University.Data;
-using Microsoft.EntityFrameworkCore;
+
+
 
 namespace University.Services
 {
     public class FileServices : IFileServices
     {
-        private readonly IWebHostEnvironment _webHost;
+        private readonly IHostEnvironment _webHost;
         private readonly UniversityContext _context;
 
-        public FileServices(IWebHostEnvironment webHost, UniversityContext context)
+        public FileServices
+            (
+                IHostEnvironment webHost,
+                UniversityContext context
+            )
         {
             _webHost = webHost;
             _context = context;
         }
 
-        // 1. ÜHE PILDI SALVESTAMINE
-        public void FilesToApi(CourseCreateViewModel dto, Course domain)
+        public async Task AddFilesToCourse(List<IFormFile> files, int courseId)
         {
-            if (dto.File != null && dto.File.Length > 0)
+            if (files == null || files.Count == 0)
+                return;
+
+            var folder = Path.Combine(
+                _webHost.ContentRootPath,
+                "wwwroot",
+                "multipleFileUpload");
+
+            if (!Directory.Exists(folder))
             {
-                string uploadsFolder = Path.Combine(_webHost.WebRootPath, "images");
-                string uniqueFileName = Guid.NewGuid().ToString() + "_" + dto.File.FileName;
-                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                Directory.CreateDirectory(folder);
+            }
 
-                if (!Directory.Exists(uploadsFolder))
+            foreach (var file in files)
+            {
+                string uniqueFileName =
+                    Guid.NewGuid() + "-" + file.FileName;
+
+                string filePath = Path.Combine(folder, uniqueFileName);
+
+                using (var stream = new FileStream(filePath, FileMode.Create))
                 {
-                    Directory.CreateDirectory(uploadsFolder);
+                    await file.CopyToAsync(stream);
                 }
 
-                using (var fileStream = new FileStream(filePath, FileMode.Create))
-                {
-                    dto.File.CopyTo(fileStream);
-                }
-
-                var fileToApi = new FileToApi
+                var entity = new FileToApi
                 {
                     Id = Guid.NewGuid(),
                     ExistingFilePath = uniqueFileName,
-                    CourseId = domain.CourseId
+                    CourseId = courseId
                 };
 
-                _context.FileToApis.Add(fileToApi);
+                _context.FileToApis.Add(entity);
             }
+
+            await _context.SaveChangesAsync();
         }
 
-        // 2. ÜHE PILDI KUSTUTAMINE
-        public async Task<FileToApi?> RemoveImageFromApi(FileToApiDto dto)
+        public async Task RemoveImagesFromApi(List<FileToApi> files)
         {
-            var image = await _context.FileToApis
-                .FirstOrDefaultAsync(x => x.Id == dto.Id);
+            if (files == null || files.Count == 0)
+                return;
 
-            if (image != null)
+            foreach (var file in files)
             {
-                string filePath = Path.Combine(_webHost.WebRootPath, "images", image.ExistingFilePath);
+                var filePath = Path.Combine(
+                    _webHost.ContentRootPath,
+                    "wwwroot",
+                    "multipleFileUpload",
+                    file.ExistingFilePath);
 
                 if (File.Exists(filePath))
                 {
                     File.Delete(filePath);
                 }
-
-                _context.FileToApis.Remove(image);
-                await _context.SaveChangesAsync();
             }
 
-            return image;
+            _context.FileToApis.RemoveRange(files);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveFileFromApi(FileToApi file)
+        {
+            if (file == null)
+                return;
+
+            var filePath = Path.Combine(
+                _webHost.ContentRootPath,
+                "wwwroot",
+                "multipleFileUpload",
+                file.ExistingFilePath);
+
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
+
+            _context.FileToApis.Remove(file);
+            await _context.SaveChangesAsync();
         }
     }
 }

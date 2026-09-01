@@ -33,26 +33,28 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.DepartmentId)
         </dd>
-        <dt class="col-sm-2">
-            Kursuse pilt
-        </dt>
-        <dt class="col-sm-2">
-            Kursuse pilt
-        </dt>
-        <dd class="col-sm-10">
-            @if (Model.Image != null && Model.Image.Count > 0)
-            {
-                dynamic firstImage = Model.Image[0];
-                // Proovi esmalt ExistingFilePath, kui pilti ei tule, proovi lihtsalt FilePath
-                <img src="~/images/@firstImage.FilePath" alt="Kursuse pilt" style="max-width: 300px; border-radius: 8px;" />
-            }
-            else
-            {
-                <span class="text-muted">Pilti pole üles laaditud</span>
-            }
-        </dd>
     </dl>
+    <h3>Files</h3>
+
+    @if (Model.Files != null && Model.Files.Count > 0)
+    {
+        foreach (var file in Model.Files)
+        {
+            var photoPaths = "~/multipleFileUpload/" + (@file.FilePath ?? "noimage.jpg");
+
+            <div class="form-group row col-sm-4 offset-2">
+                <div>@file.FilePath</div>
+                <img class="card-image-top" src="@photoPaths" asp-append-version="true" />
+            </div>
+        }
+    }
+    else
+    {
+        <p>No files uploaded</p>
+    }
+
 </div>
 <div>
-    <a asp-action="Index">Back to List</a>
+    <a asp-action="Index">Back to List</a> | 
+    <a asp-action="Update" class="btn btn-outline-danger" asp-route-id="@Model.CourseId">Edit</a>
 </div>

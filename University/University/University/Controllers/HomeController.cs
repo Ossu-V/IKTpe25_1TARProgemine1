@@ -5,7 +5,6 @@ using University.Data;
 using University.Models;
 using University.ViewModel;
 
-
 namespace University.Controllers
 {
     public class HomeController : Controller

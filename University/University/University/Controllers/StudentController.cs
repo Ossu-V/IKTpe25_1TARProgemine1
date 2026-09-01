@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics;
-using System.Reflection;
-using System.Reflection.Metadata.Ecma335;
 using University.Data;
 using University.Models;
 using University.Utilities;
@@ -21,8 +18,10 @@ namespace University.Controllers
         {
             _context = context;
         }
+
         public async Task<IActionResult> Index(string sortOrder, string searchString, int? pageNumber, string currentFilter)
         {
+
             ViewData["NameSortParm"] = string.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
             ViewData["DateSortParm"] = sortOrder == "Date" ? "date_desc" : "Date";
             ViewData["CurrentFilter"] = searchString;
@@ -37,9 +36,9 @@ namespace University.Controllers
             }
 
             //var students = from s in _context.Students
-            //select s;
+            //               select s;
 
-            //leiame kõik student´id ja teisendame need StudentIndexViewModel´iks
+            //leiame kõik student'id ja teisendame need StudentIndexViewModel'iks
             //miks peab kasutama await?
             //kui me kasutame await, siis me ootame kuni päring on lõpetatud
             //ja saame tulemuse, enne kui me jätkame koodi täitmist
@@ -51,13 +50,13 @@ namespace University.Controllers
                     FirstMidName = s.FirstMidName,
                     EnrollmentDate = s.EnrollmentDate
                     //miks kasutame ToListAsync()?
-                    //kui kasutame ToListAsync(), siis me saame tulemuse listina
+                    //kui me kasutame ToListAsync(), siis me saame tulemuse listina
                 });
 
             if (!string.IsNullOrEmpty(searchString))
             {
                 students = students.Where(s => s.LastName.Contains(searchString)
-                                   || s.FirstMidName.Contains(searchString));
+                                    || s.FirstMidName.Contains(searchString));
             }
 
             switch (sortOrder)
@@ -94,7 +93,7 @@ namespace University.Controllers
                 return NotFound();
             }
 
-            //leiame student´i id järgi
+            //leiame student'i id järgi
             var student = await _context.Students
                 //Include lubab objekti kasutada objekti sees
                 .Include(s => s.Enrollments)
@@ -125,8 +124,6 @@ namespace University.Controllers
                             Title = x.Course?.Title,
                             Credits = x.Course?.Credits ?? 0
                         }
-                        //üks õpilane võib mitu kursust olla läbinud ja
-                        //selle tulemusel tuleb lõppu panna ToArray
                     }).ToArray()
             };
 
@@ -136,27 +133,27 @@ namespace University.Controllers
                 return NotFound();
             }
 
-            //kui student on leitud, siis tagastame View(student) tulemuse
+            //kui student on leitud, siis tagastame View(vm) tulemuse
             return View(vm);
         }
 
         //GET: Student/Create
-        //see meetod tagastab vaate, kus saab luua uue student´i
+        //see meetod tagastab vaate, kus saab luua uue student'i
         public IActionResult Create()
         {
             return View();
         }
 
         //POST: Student/Create
-        //see meetod salvestab uue student´i andmebaasi
+        //see meetod salvestab uue student'i andmebaasi
         [HttpPost]
-        //see meetod on kaitstud CSRF rünnaktue eest
+        //see meetod on kaitstud CSRF rünnakute eest
         //see meetod on asünkroonene, mis tähendab, et see meetod ei saa
         //olla samaaegselt mitu korda käivitatud
         public async Task<IActionResult> Create(StudentCreateViewModel vm)
         {
-            //kui model on valiidne, siis loome uue studen´i ja salvestame selle andmebaasi
-            if (ModelState.IsValid)
+            //kui model on valiidne, siis loome uue student'i ja salvestame selle andmebaasi
+            if (!ModelState.IsValid)
             {
                 var student = new Models.Student
                 {
@@ -164,7 +161,7 @@ namespace University.Controllers
                     FirstMidName = vm.FirstMidName,
                     EnrollmentDate = vm.EnrollmentDate
                 };
-                //lisame stundent´i andmebaasi ja salvestame muudatused
+                //lisame student'i andmebaasi ja salvestame muudatused
                 _context.Add(student);
                 //miks kasutame await?
                 //kui me kasutame await, siis me ootame kuni salvestamine on lõpetatud
@@ -181,8 +178,7 @@ namespace University.Controllers
             var student = await _context.Students
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-
-            //kui student on null, siis on NotFound()
+            //kui sutudent on null, siis on NotFound()
             if (student == null)
             {
                 return NotFound();
@@ -193,11 +189,10 @@ namespace University.Controllers
                 Id = student.Id,
                 FirstMidName = student.FirstMidName,
                 LastName = student.LastName,
-                EnrollmentDate = student.EnrollmentDate
+                EnrollmentDate= student.EnrollmentDate
             };
 
             //tuleb teha domaini modelist andmete ülekanne view modeli omasse
-
             return View(vm);
         }
 
@@ -215,16 +210,16 @@ namespace University.Controllers
                 };
 
                 var studentUpdate = student.Id;
-                //lisame stundent´i andmebaasi ja salvestame muudatused
+                //lisame student'i andmebaasi ja salvestame muudatused
                 _context.Update(student);
                 //miks kasutame await?
                 //kui me kasutame await, siis me ootame kuni salvestamine on lõpetatud
                 await _context.SaveChangesAsync();
                 //pärast salvestamist suuname kasutaja tagasi Index vaatesse
 
-                //kui andmed on uuendatud, siis suunab tagasi Update vaatesse, kus saab kohe uuesti andmeid uuendada.
+                //Kui andmed on uuendatud, siis suunab tagasi Update vaatesse, kus saab kohe uuesti andmeid uuendada.
                 //Hetkel suunab Indexi vaatesse peale uuendust
-                return RedirectToAction(nameof(Index), new {id = studentUpdate});
+                return RedirectToAction(nameof(Update), new { id = studentUpdate });
             }
 
             return RedirectToAction(nameof(Index));
@@ -237,6 +232,7 @@ namespace University.Controllers
             {
                 return NotFound();
             }
+
 
             var student = await _context.Students
                 .Include(s => s.Enrollments)
@@ -272,6 +268,7 @@ namespace University.Controllers
             return View(vm);
         }
 
+
         //tuleb teha ankeedi kustutamise nupp
         public async Task<IActionResult> DeletePost(int id)
         {
@@ -291,7 +288,7 @@ namespace University.Controllers
             }
             catch (DbUpdateException)
             {
-                return RedirectToAction(nameof(Delete), new {id = id, SaveChangesError = true});
+                return RedirectToAction(nameof(Delete), new { id = id, saveChangesError = true });
                 throw;
             }
 

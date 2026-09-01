@@ -1,13 +1,12 @@
-﻿using University.Dto;
-using University.Models;
-using University.ViewModel.CourseVM;
+﻿using University.Models;
+
 
 namespace University.ServiceInterface
 {
     public interface IFileServices
     {
-        // Muutsime CourseDto -> CourseCreateViewModel
-        void FilesToApi(CourseCreateViewModel dto, Course domain);
-        Task<FileToApi?> RemoveImageFromApi(FileToApiDto dto);
+        Task AddFilesToCourse(List<IFormFile> files, int courseId);
+        Task RemoveImagesFromApi(List<FileToApi> files);
+        Task RemoveFileFromApi(FileToApi file);
     }
 }
